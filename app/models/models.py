@@ -1,10 +1,36 @@
 from ..extensions import db
 from datetime import datetime
 
+class Tenant(db.Model):
+    __tablename__ = 'tenants'
+
+    TenantID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantName = db.Column(db.String(255), nullable=False)
+    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    IsActive = db.Column(db.Boolean, default=True)
+
+    # Relationships
+    users = db.relationship('User', backref='tenant', lazy=True)
+    projects = db.relationship('Project', backref='tenant', lazy=True)
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    UserID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
+    Username = db.Column(db.String(255), unique=True, nullable=False)
+    Email = db.Column(db.String(255), unique=True, nullable=False)
+    PasswordHash = db.Column(db.String(255), nullable=False)
+    FullName = db.Column(db.String(255), nullable=False)
+    Role = db.Column(db.String(50), default='user')  # admin, user, etc.
+    CreatedAt = db.Column(db.DateTime, default=datetime.utcnow)
+    IsActive = db.Column(db.Boolean, default=True)
+
 class Project(db.Model):
     __tablename__ = 'projects'
 
     ProjectID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     ProjectName = db.Column(db.String(255), nullable=False)
     IsActive = db.Column(db.Boolean, default=True)
 
@@ -16,6 +42,7 @@ class MainDevice(db.Model):
     __tablename__ = 'MainDevices'
 
     MainDeviceID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     DeviceName = db.Column(db.String(255), nullable=False)
     Location = db.Column(db.String(255))
     DeviceType = db.Column(db.String(255))
@@ -31,6 +58,7 @@ class SubDevice(db.Model):
     __tablename__ = 'SubDevices'
 
     SubDeviceID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     SubDeviceName = db.Column(db.String(255), nullable=False)
     SubDeviceType = db.Column(db.String(255))
     MainDeviceID = db.Column(db.Integer, db.ForeignKey('MainDevices.MainDeviceID'))
@@ -43,6 +71,7 @@ class Employee(db.Model):
     __tablename__ = 'Employees'
 
     EmployeeID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     EmployeeCode = db.Column(db.String(255))
     FullName = db.Column(db.String(255), nullable=False)
     IsActive = db.Column(db.Boolean, default=True)
@@ -54,6 +83,7 @@ class Problem(db.Model):
     __tablename__ = 'problems'
 
     ProblemID = db.Column(db.Integer, primary_key=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     ProjectID = db.Column(db.Integer, db.ForeignKey('projects.ProjectID'))
     MainDeviceID = db.Column(db.Integer, db.ForeignKey('MainDevices.MainDeviceID'))
     SubDeviceID = db.Column(db.Integer, db.ForeignKey('SubDevices.SubDeviceID'), nullable=True)
@@ -75,6 +105,7 @@ class DeviceTimeline(db.Model):
     __tablename__ = 'DeviceTimeline'
 
     TimelineID = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    TenantID = db.Column(db.Integer, db.ForeignKey('tenants.TenantID'), nullable=False)
     DeviceID = db.Column(db.Integer, db.ForeignKey('MainDevices.MainDeviceID'))
     EventDate = db.Column(db.String(50))
     EventTime = db.Column(db.String(50))

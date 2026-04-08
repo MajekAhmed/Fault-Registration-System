@@ -8,6 +8,7 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def index():
     """الصفحة الرئيسية - تعرض آخر 5 أعطال"""
+    tenant_id = 1  # TODO: Get from session/user
     problems = db.session.query(
         Problem.ProblemID,
         Problem.MainDeviceID,
@@ -21,6 +22,7 @@ def index():
     ).join(Project, Problem.ProjectID == Project.ProjectID) \
      .join(MainDevice, Problem.MainDeviceID == MainDevice.MainDeviceID) \
      .outerjoin(Employee, Problem.AssignedTo == Employee.EmployeeID) \
+     .filter(Problem.TenantID == tenant_id) \
      .order_by(Problem.ProblemID.desc()) \
      .limit(5).all()
 
@@ -29,13 +31,15 @@ def index():
 @main_bp.route('/add_problem', methods=['GET'])
 def add_problem():
     """عرض صفحة إضافة عطل جديد"""
-    projects = Project.query.filter_by(IsActive=True).all()
-    employees = Employee.query.filter_by(IsActive=True).all()
+    tenant_id = 1  # TODO: Get from session/user
+    projects = Project.query.filter_by(TenantID=tenant_id, IsActive=True).all()
+    employees = Employee.query.filter_by(TenantID=tenant_id, IsActive=True).all()
     return render_template('add_problem.html', projects=projects, employees=employees)
 
 @main_bp.route('/add_problem', methods=['POST'])
 def save_problem():
     """استقبال بيانات العطل الجديد وحفظها في قاعدة البيانات"""
+    tenant_id = 1  # TODO: Get from session/user
     project_id = request.form.get('project_id')
     main_device_id = request.form.get('main_device_id')
     sub_device_id = request.form.get('sub_device_id') or None
@@ -54,6 +58,7 @@ def save_problem():
     # إنشاء العطل الجديد
     new_problem = Problem(
         ProblemID=problem_id,
+        TenantID=tenant_id,
         ProjectID=project_id,
         MainDeviceID=main_device_id,
         SubDeviceID=sub_device_id,
@@ -70,6 +75,7 @@ def save_problem():
 
     # إضافة حدث تلقائي في DeviceTimeline
     timeline_event = DeviceTimeline(
+        TenantID=tenant_id,
         DeviceID=main_device_id,
         EventDate=datetime.now().strftime('%Y-%m-%d'),
         EventTime=get_current_time(),
@@ -90,6 +96,7 @@ def view_problems():
 @main_bp.route('/view_problems', methods=['POST'])
 def search_problems():
     """البحث عن الأعطال حسب المعايير"""
+    tenant_id = 1  # TODO: Get from session/user
     search = request.form.get('search', '').strip()
     from_date = request.form.get('from_date', '')
     to_date = request.form.get('to_date', '')
@@ -112,7 +119,8 @@ def search_problems():
     ).join(Project, Problem.ProjectID == Project.ProjectID) \
      .join(MainDevice, Problem.MainDeviceID == MainDevice.MainDeviceID) \
      .outerjoin(SubDevice, Problem.SubDeviceID == SubDevice.SubDeviceID) \
-     .outerjoin(Employee, Problem.AssignedTo == Employee.EmployeeID)
+     .outerjoin(Employee, Problem.AssignedTo == Employee.EmployeeID) \
+     .filter(Problem.TenantID == tenant_id)
 
     # تطبيق الفلاتر
     if search:
@@ -136,15 +144,17 @@ def search_problems():
 @main_bp.route('/edit_problem/<int:problem_id>', methods=['GET'])
 def edit_problem(problem_id):
     """عرض صفحة تعديل العطل"""
-    problem = Problem.query.get_or_404(problem_id)
-    projects = Project.query.filter_by(IsActive=True).all()
-    employees = Employee.query.filter_by(IsActive=True).all()
+    tenant_id = 1  # TODO: Get from session/user
+    problem = Problem.query.filter_by(ProblemID=problem_id, TenantID=tenant_id).first_or_404()
+    projects = Project.query.filter_by(TenantID=tenant_id, IsActive=True).all()
+    employees = Employee.query.filter_by(TenantID=tenant_id, IsActive=True).all()
     return render_template('edit_problem.html', problem=problem, projects=projects, employees=employees)
 
 @main_bp.route('/edit_problem/<int:problem_id>', methods=['POST'])
 def update_problem(problem_id):
     """تحديث بيانات العطل"""
-    problem = Problem.query.get_or_404(problem_id)
+    tenant_id = 1  # TODO: Get from session/user
+    problem = Problem.query.filter_by(ProblemID=problem_id, TenantID=tenant_id).first_or_404()
 
     problem.ProjectID = request.form.get('project_id')
     problem.MainDeviceID = request.form.get('main_device_id')
@@ -174,7 +184,8 @@ def reports():
 @main_bp.route('/api/sub_devices/<int:main_device_id>')
 def get_sub_devices(main_device_id):
     """API لجلب الأجهزة الثانوية لجهاز رئيسي"""
-    sub_devices = SubDevice.query.filter_by(MainDeviceID=main_device_id, IsActive=True).all()
+    tenant_id = 1  # TODO: Get from session/user
+    sub_devices = SubDevice.query.filter_by(MainDeviceID=main_device_id, TenantID=tenant_id, IsActive=True).all()
     return jsonify([{'id': sd.SubDeviceID, 'name': sd.SubDeviceName} for sd in sub_devices])
 
 @main_bp.route('/api/device_info/<int:device_id>')

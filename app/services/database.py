@@ -1,5 +1,7 @@
 from ..extensions import db
+from ..models import Tenant, User
 from datetime import datetime
+import hashlib
 
 def get_current_time():
     """يرجع الوقت الحالي بصيغة 12 ساعة مع AM/PM"""
@@ -34,3 +36,27 @@ def add_missing_columns():
     # في SQLAlchemy، الأعمدة تُعرف في الـ models، و db.create_all() ينشئها
     # هذه الدالة للتوافق مع الكود القديم
     pass
+
+def create_default_data():
+    """إنشاء البيانات الافتراضية إذا لم تكن موجودة"""
+    # Create default tenant
+    tenant = Tenant.query.filter_by(TenantName='Default Tenant').first()
+    if not tenant:
+        tenant = Tenant(TenantName='Default Tenant')
+        db.session.add(tenant)
+        db.session.commit()
+
+    # Create default admin user
+    user = User.query.filter_by(Username='admin').first()
+    if not user:
+        password_hash = hashlib.sha256('admin123'.encode()).hexdigest()
+        user = User(
+            TenantID=tenant.TenantID,
+            Username='admin',
+            Email='admin@example.com',
+            PasswordHash=password_hash,
+            FullName='Administrator',
+            Role='admin'
+        )
+        db.session.add(user)
+        db.session.commit()
