@@ -44,7 +44,9 @@ try:
     print("=" * 50)
 
     # استيراد app بعد تحديد المسارات
-    from app import app
+    from app import create_app
+
+    app = create_app()
 
     # فتح المتصفح في background
     t = threading.Thread(target=open_browser)
