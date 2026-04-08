@@ -108,6 +108,8 @@ def init_db():
             ClosedTime TEXT,
             Solution TEXT,
             MTTR REAL,
+            UpdateNo INTEGER DEFAULT 0,
+            RepairDurationHours REAL,
             FOREIGN KEY (ProjectID) REFERENCES projects(ProjectID),
             FOREIGN KEY (MainDeviceID) REFERENCES MainDevices(MainDeviceID),
             FOREIGN KEY (SubDeviceID) REFERENCES SubDevices(SubDeviceID),
@@ -132,8 +134,27 @@ def init_db():
     conn.close()
 
 
+# إضافة أعمدة مفقودة إذا لم تكن موجودة
+def add_missing_columns():
+    """إضافة أعمدة مفقودة في الجداول إذا لم تكن موجودة"""
+    conn = get_db()
+    cursor = conn.cursor()
+
+    # التحقق من وجود عمود UpdateNo في جدول problems
+    cursor.execute("PRAGMA table_info(problems)")
+    columns = [col[1] for col in cursor.fetchall()]
+    if 'UpdateNo' not in columns:
+        cursor.execute("ALTER TABLE problems ADD COLUMN UpdateNo INTEGER DEFAULT 0")
+    if 'RepairDurationHours' not in columns:
+        cursor.execute("ALTER TABLE problems ADD COLUMN RepairDurationHours REAL")
+
+    conn.commit()
+    conn.close()
+
+
 # إنشاء قاعدة البيانات إذا لم تكن موجودة
 init_db()
+add_missing_columns()
 
 
 # ================================================
@@ -314,7 +335,7 @@ def view_problems():
                 p.SubDeviceID,
                 sd.SubDeviceName,
                 p.Location,
-                p.Type,
+                p.DeviceType,
                 p.ProblemDescription,
                 p.ReportedDate,
                 p.ReportedTime,
@@ -541,7 +562,7 @@ def edit_database():
             pr.ProjectName AS ProjectName
         FROM SubDevices sd
         LEFT JOIN MainDevices md ON sd.MainDeviceID = md.MainDeviceID
-        LEFT JOIN projects    pr ON sd.ProjectID    = pr.ProjectID
+        LEFT JOIN projects    pr ON md.ProjectID    = pr.ProjectID
         WHERE sd.IsActive = 1
         ORDER BY pr.ProjectName, md.DeviceName, sd.SubDeviceName
     ''').fetchall()
@@ -772,7 +793,7 @@ def sub_device_card(sub_device_id):
         SELECT sd.*, md.DeviceName AS MainDeviceName, pr.ProjectName
         FROM SubDevices sd
         LEFT JOIN MainDevices md ON sd.MainDeviceID = md.MainDeviceID
-        LEFT JOIN projects    pr ON sd.ProjectID    = pr.ProjectID
+        LEFT JOIN projects    pr ON md.ProjectID    = pr.ProjectID
         WHERE sd.SubDeviceID = ?
     ''', (sub_device_id,)).fetchone()
 
