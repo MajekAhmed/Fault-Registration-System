@@ -54,24 +54,29 @@
 
 ```
 Fault Registration System v2.1/
-├── app.py                 # الملف الرئيسي للتطبيق
-├── launcher.py           # مشغل التطبيق كـ exe
-├── FRS.spec             # ملف PyInstaller
-├── fault_registration.db       # قاعدة البيانات
-├── static/               # الملفات الثابتة
-│   ├── Script.js
-│   └── styles.css
-├── templates/            # قوالب HTML
-│   ├── base.html
-│   ├── index.html
-│   ├── add_problem.html
-│   ├── view_problems.html
-│   ├── edit_problem.html
-│   ├── reports.html
-│   ├── device_card.html
-│   ├── sub_device_card.html
-│   └── edit_database.html
-└── README.md             # هذا الملف
+├── app/                          # التطبيق الرئيسي
+│   ├── __init__.py              # Application factory
+│   ├── extensions.py            # Flask extensions
+│   ├── models/                  # Database models
+│   │   ├── __init__.py
+│   │   └── models.py
+│   ├── routes/                  # Blueprints for routes
+│   │   ├── __init__.py
+│   │   ├── main.py             # Main routes (index, problems, reports)
+│   │   ├── devices.py          # Device management routes
+│   │   └── database.py         # Database management routes
+│   ├── services/                # Business logic
+│   │   ├── __init__.py
+│   │   └── database.py         # Database utilities
+│   └── auth/                    # Authentication (prepared for multi-tenancy)
+│       └── __init__.py
+├── templates/                   # HTML templates
+├── static/                      # Static files (CSS, JS, images)
+├── launcher.py                  # Application launcher
+├── FRS.spec                     # PyInstaller spec
+├── requirements.txt             # Python dependencies
+├── README.md                    # This file
+└── .gitignore                   # Git ignore rules
 ```
 
 ## قاعدة البيانات
@@ -110,6 +115,11 @@ Fault Registration System v2.1/
 - إضافة عمود "الحل المتخذ" في التقارير
 - تحسين تنسيق PDF لورقة A4
 - إضافة ملف README.md
+- **إعادة هيكلة كاملة للكود ليكون قابلاً للتوسع (SaaS-ready):**
+  - تحويل إلى SQLAlchemy ORM
+  - استخدام Application Factory Pattern
+  - تنظيم الكود في modules منفصلة
+  - إعداد للـ multi-tenancy المستقبلي
 
 ## المطور
 
@@ -117,4 +127,4 @@ Ahmed Ragab
 
 ## الترخيص
 
-هذا المشروع مطور من قبل أحمد رجب 01122296862 owen.ar2002@gmail.com.
+هذا المشروع مطور ليكون قابلاً للاستخدام العام والتوسع.
