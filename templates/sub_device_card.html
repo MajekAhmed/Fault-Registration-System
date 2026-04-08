@@ -1,0 +1,328 @@
+{% extends "base.html" %}
+{% block title %}بطاقة الجهاز الثانوي - {{ sub_device.SubDeviceName }}{% endblock %}
+
+{% block content %}
+
+<!-- ====== هيدر البطاقة ====== -->
+<div class="device-header card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row align-items-center">
+
+            <!-- أيقونة الجهاز واسمه -->
+            <div class="col-md-6 d-flex align-items-center gap-3">
+                <div class="device-icon-circle">
+                    <i class="fas fa-cogs"></i>
+                </div>
+                <div>
+                    <h3 class="mb-1 fw-bold">{{ sub_device.SubDeviceName }}</h3>
+                    <span class="badge bg-primary me-1">{{ sub_device.ProjectName }}</span>
+                    <span class="badge bg-secondary">{{ sub_device.SubDeviceType or 'غير محدد' }}</span>
+                    <div class="text-muted small mt-1">
+                        <i class="fas fa-link me-1"></i>تابع لـ: {{ sub_device.MainDeviceName }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- الحالة والمعلومات السريعة -->
+            <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                <!-- حالة الجهاز -->
+                <div class="mb-2">
+                    {% if sub_device.Status == 'نشط' %}
+                        <span class="badge bg-success fs-6 px-3 py-2">
+                            <i class="fas fa-circle me-1" style="font-size:8px"></i>نشط
+                        </span>
+                    {% elif sub_device.Status == 'صيانة' %}
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">
+                            <i class="fas fa-tools me-1"></i>صيانة
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger fs-6 px-3 py-2">
+                            <i class="fas fa-times-circle me-1"></i>{{ sub_device.Status }}
+                        </span>
+                    {% endif %}
+                </div>
+                <div class="text-muted small">
+                    المنفذ المتصل:
+                    <strong>{{ sub_device.ConnectedPort or 'غير محدد' }}</strong>
+                </div>
+                <div class="text-muted small">
+                    تاريخ التركيب:
+                    <strong>{{ sub_device.InstallDate or 'غير مسجل' }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== KPI Cards ====== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="fas fa-list-alt"></i></div>
+            <div class="kpi-number">{{ total_faults }}</div>
+            <div class="kpi-label">إجمالي الأعطال</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-open">
+            <div class="kpi-icon"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="kpi-number">{{ open_faults }}</div>
+            <div class="kpi-label">أعطال مفتوحة</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-mttr">
+            <div class="kpi-icon"><i class="fas fa-stopwatch"></i></div>
+            <div class="kpi-number">{{ mttr }}<small> س</small></div>
+            <div class="kpi-label">متوسط وقت الإصلاح</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-closed">
+            <div class="kpi-icon"><i class="fas fa-tag"></i></div>
+            <div class="kpi-number">{{ sub_device.AssetTag or 'غير محدد' }}</div>
+            <div class="kpi-label">رقم الأصل</div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== التبويبات ====== -->
+<ul class="nav nav-tabs mb-4" id="deviceTabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#timeline-tab">
+            <i class="fas fa-history me-1"></i>التايم لاين
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#info-tab">
+            <i class="fas fa-info-circle me-1"></i>المعلومات التقنية
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#faults-tab">
+            <i class="fas fa-exclamation-triangle me-1"></i>سجل الأعطال
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- تاب: التايم لاين -->
+    <div class="tab-pane fade show active" id="timeline-tab">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-history me-2"></i>التايم لاين</h6>
+                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                    <i class="fas fa-plus me-1"></i>إضافة حدث
+                </button>
+            </div>
+            <div class="card-body">
+                {% if timeline %}
+                <div class="timeline">
+                    {% for event in timeline %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ event.EventType }}</h6>
+                                    <p class="mb-1 text-muted">{{ event.Description }}</p>
+                                    {% if event.Notes %}
+                                    <small class="text-muted">{{ event.Notes }}</small>
+                                    {% endif %}
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted">
+                                        {{ event.EventDate }}<br>
+                                        {{ event.EventTime }}
+                                    </small>
+                                    {% if event.PerformedByName %}
+                                    <div class="mt-1">
+                                        <span class="badge bg-secondary">{{ event.PerformedByName }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-history fa-2x mb-2"></i>
+                    <p>لا توجد أحداث مسجلة لهذا الجهاز</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: المعلومات التقنية -->
+    <div class="tab-pane fade" id="info-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>المعلومات التقنية</h6>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>الاسم:</label>
+                            <span>{{ sub_device.SubDeviceName }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>النوع:</label>
+                            <span>{{ sub_device.SubDeviceType or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>المنفذ المتصل:</label>
+                            <span>{{ sub_device.ConnectedPort or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>رقم الأصل:</label>
+                            <span>{{ sub_device.AssetTag or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>الرقم التسلسلي:</label>
+                            <span>{{ sub_device.SerialNumber or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>الشركة المصنعة:</label>
+                            <span>{{ sub_device.Manufacturer or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>الموديل:</label>
+                            <span>{{ sub_device.Model or 'غير محدد' }}</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-item">
+                            <label>تاريخ التركيب:</label>
+                            <span>{{ sub_device.InstallDate or 'غير مسجل' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: سجل الأعطال -->
+    <div class="tab-pane fade" id="faults-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>سجل الأعطال</h6>
+            </div>
+            <div class="card-body p-0">
+                {% if all_faults %}
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>رقم العطل</th>
+                                <th>الوصف</th>
+                                <th>التاريخ</th>
+                                <th>الحالة</th>
+                                <th>المسؤول</th>
+                                <th>مدة الإصلاح</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for fault in all_faults %}
+                            <tr>
+                                <td><strong>{{ fault.ProblemID }}</strong></td>
+                                <td>{{ fault.ProblemDescription[:50] }}{% if fault.ProblemDescription|length > 50 %}...{% endif %}</td>
+                                <td><small>{{ fault.ReportedDate }}</small></td>
+                                <td>
+                                    {% if fault.Status == 'مفتوح' %}
+                                        <span class="badge bg-danger">مفتوح</span>
+                                    {% elif fault.Status == 'قيد الإصلاح' %}
+                                        <span class="badge bg-warning text-dark">قيد الإصلاح</span>
+                                    {% else %}
+                                        <span class="badge bg-success">مغلق</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ fault.AssignedToName or '-' }}</td>
+                                <td>
+                                    {% if fault.RepairDurationHours %}
+                                        {{ fault.RepairDurationHours }} ساعة
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center text-muted py-4">
+                    <i class="fas fa-check-circle fa-2x mb-2 text-success"></i>
+                    <p>لا توجد أعطال مسجلة لهذا الجهاز</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- مودال إضافة حدث -->
+<div class="modal fade" id="addEventModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة حدث جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/add_timeline_event" method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="device_id" value="{{ sub_device.SubDeviceID }}">
+                    <input type="hidden" name="device_type" value="Sub">
+                    <div class="mb-3">
+                        <label class="form-label">نوع الحدث</label>
+                        <select name="event_type" class="form-select" required>
+                            <option value="صيانة دورية">صيانة دورية</option>
+                            <option value="تغيير جزء">تغيير جزء</option>
+                            <option value="تحديث برمجي">تحديث برمجي</option>
+                            <option value="فحص">فحص</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الوصف</label>
+                        <textarea name="description" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المنفذ</label>
+                        <input type="text" name="notes" class="form-control" placeholder="ملاحظات إضافية">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">المنفذ</label>
+                        <select name="performed_by" class="form-select">
+                            <option value="">-- اختر الموظف --</option>
+                            {% for emp in employees %}
+                            <option value="{{ emp.EmployeeID }}">{{ emp.FullName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

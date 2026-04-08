@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}إضافة عطل جديد{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>تسجيل عطل جديد</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/add_problem">
+
+                    <!-- ====== اختيار المشروع ====== -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">المشروع <span class="text-danger">*</span></label>
+                        <select name="project_id" id="project_id" class="form-select" required onchange="loadMainDevices(this.value)">
+                            <option value="">-- اختر المشروع --</option>
+                            {% for proj in projects %}
+                            <option value="{{ proj.ProjectID }}">{{ proj.ProjectName }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- ====== اختيار الجهاز الرئيسي (يظهر بعد اختيار المشروع) ====== -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الجهاز الرئيسي <span class="text-danger">*</span></label>
+                        <select name="main_device_id" id="main_device_id" class="form-select" required onchange="loadSubDevices(this.value); loadDeviceInfo(this)">
+                            <option value="">-- اختر الجهاز الرئيسي --</option>
+                        </select>
+                    </div>
+
+                    <!-- ====== اختيار الجهاز الثانوي (يظهر بعد اختيار الجهاز الرئيسي) ====== -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الجهاز الثانوي <small class="text-muted">(اختياري)</small></label>
+                        <select name="sub_device_id" id="sub_device_id" class="form-select">
+                            <option value="">-- لا يوجد جهاز ثانوي --</option>
+                        </select>
+                    </div>
+
+                    <!-- ====== معلومات تلقائية (للعرض فقط) ====== -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الموقع</label>
+                            <input type="text" id="location_display" class="form-control bg-light" readonly placeholder="يظهر تلقائياً">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">نوع الجهاز</label>
+                            <input type="text" id="type_display" class="form-control bg-light" readonly placeholder="يظهر تلقائياً">
+                        </div>
+                    </div>
+
+                    <!-- ====== وصف العطل ====== -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">وصف العطل <span class="text-danger">*</span></label>
+                        <textarea name="problem_description" class="form-control" rows="4"
+                                  placeholder="اكتب وصفاً تفصيلياً للعطل..." required></textarea>
+                    </div>
+
+                    <!-- ====== الحالة والمسؤول ====== -->
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الحالة</label>
+                            <select name="status" class="form-select">
+                                <option value="مفتوح" selected>مفتوح</option>
+                                <option value="قيد الإصلاح">قيد الإصلاح</option>
+                                <option value="مغلق">مغلق</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الموظف المسؤول</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">-- غير محدد --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.EmployeeID }}">{{ emp.EmployeeCode }} - {{ emp.FullName }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ====== أزرار الإجراءات ====== -->
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="/" class="btn btn-secondary">
+                            <i class="fas fa-times me-1"></i>إلغاء
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>حفظ العطل
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// جلب الأجهزة الرئيسية عند اختيار المشروع
+function loadMainDevices(projectId) {
+    if (!projectId) return;
+    fetch(`/api/main_devices/${projectId}`)
+        .then(r => r.json())
+        .then(devices => {
+            const sel = document.getElementById('main_device_id');
+            sel.innerHTML = '<option value="">-- اختر الجهاز الرئيسي --</option>';
+            devices.forEach(d => {
+                sel.innerHTML += `<option value="${d.MainDeviceID}"
+                    data-location="${d.Location}" data-type="${d.DeviceType}">
+                    ${d.DeviceName} - ${d.Location}
+                </option>`;
+            });
+            // إعادة تعيين الجهاز الثانوي
+            document.getElementById('sub_device_id').innerHTML = '<option value="">-- لا يوجد جهاز ثانوي --</option>';
+            document.getElementById('location_display').value = '';
+            document.getElementById('type_display').value = '';
+        });
+}
+
+// جلب الأجهزة الثانوية عند اختيار الجهاز الرئيسي
+function loadSubDevices(mainDeviceId) {
+    if (!mainDeviceId) return;
+    fetch(`/api/sub_devices/${mainDeviceId}`)
+        .then(r => r.json())
+        .then(devices => {
+            const sel = document.getElementById('sub_device_id');
+            sel.innerHTML = '<option value="">-- لا يوجد جهاز ثانوي --</option>';
+            devices.forEach(d => {
+                sel.innerHTML += `<option value="${d.SubDeviceID}">${d.SubDeviceName} (${d.SubDeviceType})</option>`;
+            });
+        });
+}
+
+// عرض معلومات الجهاز تلقائياً
+function loadDeviceInfo(select) {
+    const opt = select.options[select.selectedIndex];
+    document.getElementById('location_display').value = opt.dataset.location || '';
+    document.getElementById('type_display').value     = opt.dataset.type     || '';
+}
+</script>
+{% endblock %}

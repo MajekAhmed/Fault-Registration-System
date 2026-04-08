@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+{% block title %}التقارير - Fault Registration System{% endblock %}
+
+{% block content %}
+
+<!-- ====== فلتر التقارير ====== -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter me-2"></i>فلتر التقارير</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/reports" id="reportForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">المشروع</label>
+                    <select name="project_id" class="form-select">
+                        <option value="">-- كل المشاريع --</option>
+                        {% for proj in projects %}
+                        <option value="{{ proj.ProjectID }}"
+                            {% if project_id == proj.ProjectID|string %}selected{% endif %}>
+                            {{ proj.ProjectName }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-chart-bar me-1"></i>إنشاء التقرير
+                        </button>
+                        <button type="button" class="btn btn-danger w-100" onclick="exportPDF()">
+                            <i class="fas fa-file-pdf me-1"></i>تصدير PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====== KPI Cards ====== -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-total">
+            <div class="kpi-icon"><i class="fas fa-list-alt"></i></div>
+            <div class="kpi-number">{{ total }}</div>
+            <div class="kpi-label">إجمالي الأعطال</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-open">
+            <div class="kpi-icon"><i class="fas fa-exclamation-circle"></i></div>
+            <div class="kpi-number">{{ open_count }}</div>
+            <div class="kpi-label">أعطال مفتوحة</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-progress">
+            <div class="kpi-icon"><i class="fas fa-tools"></i></div>
+            <div class="kpi-number">{{ progress_count }}</div>
+            <div class="kpi-label">قيد الإصلاح</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-closed">
+            <div class="kpi-icon"><i class="fas fa-check-circle"></i></div>
+            <div class="kpi-number">{{ closed_count }}</div>
+            <div class="kpi-label">أعطال مغلقة</div>
+        </div>
+    </div>
+</div>
+
+<!-- MTTR -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="kpi-card kpi-mttr">
+            <div class="kpi-icon"><i class="fas fa-stopwatch"></i></div>
+            <div class="kpi-number">{{ mttr }} <small>ساعة</small></div>
+            <div class="kpi-label">متوسط وقت الإصلاح (MTTR)</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card kpi-recurring">
+            <div class="kpi-icon"><i class="fas fa-redo"></i></div>
+            <div class="kpi-number">{{ recurring|length }}</div>
+            <div class="kpi-label">أجهزة بأعطال متكررة</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="kpi-card kpi-rate">
+            <div class="kpi-icon"><i class="fas fa-percentage"></i></div>
+            <div class="kpi-number">
+                {% if total > 0 %}
+                    {{ ((closed_count / total) * 100) | round(1) }}%
+                {% else %}
+                    0%
+                {% endif %}
+            </div>
+            <div class="kpi-label">معدل الإغلاق</div>
+        </div>
+    </div>
+</div>
+
+<!-- ====== التبويبات ====== -->
+<ul class="nav nav-tabs mb-4" id="reportTabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#by-project-tab">
+            <i class="fas fa-project-diagram me-1"></i>حسب المشروع
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#top-devices-tab">
+            <i class="fas fa-desktop me-1"></i>أكثر الأجهزة تعطلاً
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#by-employee-tab">
+            <i class="fas fa-users me-1"></i>أداء الموظفين
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#recurring-tab">
+            <i class="fas fa-redo me-1"></i>الأعطال المتكررة
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#all-problems-tab">
+            <i class="fas fa-list me-1"></i>كل الأعطال
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- تاب: حسب المشروع -->
+    <div class="tab-pane fade show active" id="by-project-tab">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-project-diagram me-2"></i>الأعطال حسب المشروع</h6>
+                <button onclick="window.print()" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-print me-1"></i>طباعة
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>المشروع</th>
+                                <th>عدد الأعطال</th>
+                                <th>متوسط وقت الإصلاح</th>
+                                <th>نسبة من الإجمالي</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in by_project %}
+                            <tr>
+                                <td><span class="badge bg-primary fs-6">{{ row.ProjectName }}</span></td>
+                                <td><strong>{{ row.count }}</strong></td>
+                                <td>
+                                    {% if row.avg_repair %}
+                                        {{ row.avg_repair | round(2) }} ساعة
+                                    {% else %}-{% endif %}
+                                </td>
+                                <td>
+                                    {% if total > 0 %}
+                                        <!-- شريط تقدم يوضح النسبة بصرياً -->
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1">
+                                                <div class="progress-bar bg-primary"
+                                                     style="--rate: {{ ((row.count / total) * 100) | round(1) }}%">
+                                                </div>
+                                            </div>
+                                            <small>{{ ((row.count / total) * 100) | round(1) }}%</small>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">لا توجد بيانات</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: أكثر الأجهزة تعطلاً -->
+    <div class="tab-pane fade" id="top-devices-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-desktop me-2"></i>أكثر 10 أجهزة تعطلاً</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>الجهاز</th>
+                                <th>المشروع</th>
+                                <th>عدد الأعطال</th>
+                                <th>متوسط وقت الإصلاح</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in top_devices %}
+                            <tr>
+                                <td>
+                                    {% if loop.index == 1 %}
+                                        <span class="badge bg-danger">🥇 1</span>
+                                    {% elif loop.index == 2 %}
+                                        <span class="badge bg-warning text-dark">🥈 2</span>
+                                    {% elif loop.index == 3 %}
+                                        <span class="badge bg-success">🥉 3</span>
+                                    {% else %}
+                                        {{ loop.index }}
+                                    {% endif %}
+                                </td>
+                                <td><strong>{{ row.DeviceName }}</strong></td>
+                                <td><span class="badge bg-primary">{{ row.ProjectName }}</span></td>
+                                <td>
+                                    <span class="badge bg-danger fs-6">{{ row.fault_count }}</span>
+                                </td>
+                                <td>
+                                    {% if row.avg_repair %}
+                                        {{ row.avg_repair | round(2) }} ساعة
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">لا توجد بيانات</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: أداء الموظفين -->
+    <div class="tab-pane fade" id="by-employee-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-users me-2"></i>أداء الموظفين</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>الموظف</th>
+                                <th>الكود</th>
+                                <th>إجمالي الأعطال</th>
+                                <th>المغلقة</th>
+                                <th>معدل الإغلاق</th>
+                                <th>متوسط وقت الإصلاح</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in by_employee %}
+                            <tr>
+                                <td><strong>{{ row.FullName }}</strong></td>
+                                <td><span class="badge bg-secondary">{{ row.EmployeeCode }}</span></td>
+                                <td>{{ row.total }}</td>
+                                <td>{{ row.closed }}</td>
+                                <td>
+                                    {% if row.total > 0 %}
+                                        {% set rate = ((row.closed / row.total) * 100) | round(1) %}
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1">
+                                                <div class="progress-bar bg-success"
+                                                     style="--rate: {{ rate }}%"></div>
+                                            </div>
+                                            <small>{{ rate }}%</small>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if row.avg_repair %}
+                                        {{ row.avg_repair | round(2) }} ساعة
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="6" class="text-center text-muted py-3">لا توجد بيانات</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: الأعطال المتكررة -->
+    <div class="tab-pane fade" id="recurring-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-redo me-2"></i>الأجهزة ذات الأعطال المتكررة</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>الجهاز</th>
+                                <th>المشروع</th>
+                                <th>عدد مرات التعطل</th>
+                                <th>آخر عطل</th>
+                                <th>التوصية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in recurring %}
+                            <tr>
+                                <td><strong>{{ row.DeviceName }}</strong></td>
+                                <td><span class="badge bg-primary">{{ row.ProjectName }}</span></td>
+                                <td>
+                                    <span class="badge {% if row.fault_count >= 5 %}bg-danger{% elif row.fault_count >= 3 %}bg-warning text-dark{% else %}bg-info{% endif %} fs-6">
+                                        {{ row.fault_count }} مرات
+                                    </span>
+                                </td>
+                                <td>{{ row.last_fault }}</td>
+                                <td>
+                                    {% if row.fault_count >= 5 %}
+                                        <span class="badge bg-danger">يحتاج استبدال</span>
+                                    {% elif row.fault_count >= 3 %}
+                                        <span class="badge bg-warning text-dark">صيانة شاملة</span>
+                                    {% else %}
+                                        <span class="badge bg-info">متابعة</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center text-success py-3">
+                                    <i class="fas fa-check-circle me-1"></i>
+                                    لا توجد أعطال متكررة - ممتاز!
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- تاب: كل الأعطال -->
+    <div class="tab-pane fade" id="all-problems-tab">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="fas fa-list me-2"></i>
+                    كل الأعطال <span class="badge bg-light text-dark">{{ all_problems|length }}</span>
+                </h6>
+                <button onclick="window.print()" class="btn btn-sm btn-outline-light">
+                    <i class="fas fa-print me-1"></i>طباعة
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>رقم العطل</th>
+                                <th>المشروع</th>
+                                <th>الجهاز</th>
+                                <th>الجهاز الثانوي</th>
+                                <th>الوصف</th>
+                                <th>التاريخ</th>
+                                <th>الحالة</th>
+                                <th>المسؤول</th>
+                                <th>الحل المتخذ</th>
+                                <th>مدة الإصلاح</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in all_problems %}
+                            <tr>
+                                <td><strong>{{ p.ProblemID }}</strong></td>
+                                <td><span class="badge bg-primary">{{ p.ProjectName }}</span></td>
+                                <td>{{ p.DeviceName }}</td>
+                                <td>
+                                    {% if p.SubDeviceID %}
+                                    <a href="/sub_device_card/{{ p.SubDeviceID }}" class="text-decoration-none fw-bold">
+                                    {{ p.SubDeviceName }}
+                                    <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                                    </a>
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                </td>
+                                <td>{{ p.ProblemDescription[:50] }}{% if p.ProblemDescription|length > 50 %}...{% endif %}</td>
+                                <td><small>{{ p.ReportedDate }}</small></td>
+                                <td>
+                                    {% if p.Status == 'مفتوح' %}
+                                        <span class="badge bg-danger">مفتوح</span>
+                                    {% elif p.Status == 'قيد الإصلاح' %}
+                                        <span class="badge bg-warning text-dark">قيد الإصلاح</span>
+                                    {% else %}
+                                        <span class="badge bg-success">مغلق</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ p.AssignedToName or '-' }}</td>
+                                <td>{{ p.Solution or '-' }}</td>
+                                <td>
+                                    {% if p.RepairDurationHours %}
+                                        {{ p.RepairDurationHours }} ساعة
+                                    {% else %}-{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

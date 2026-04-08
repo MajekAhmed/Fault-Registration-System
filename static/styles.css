@@ -1,0 +1,508 @@
+/* ================================================
+   styles.css - تنسيق تطبيق Fault Registration System
+   مطار أسوان الدولي - نظام تسجيل الأعطال
+   Developer: Ahmed Ragab | Version: 2.0
+   ================================================ */
+
+/* ====== المتغيرات الأساسية (ألوان التطبيق) ====== */
+:root {
+    --frs-primary:   #1a3a5c;   /* الأزرق الداكن - اللون الرئيسي */
+    --frs-secondary: #2e86c1;   /* الأزرق الفاتح */
+    --frs-accent:    #f39c12;   /* البرتقالي - لون التمييز */
+    --frs-success:   #27ae60;   /* الأخضر */
+    --frs-danger:    #e74c3c;   /* الأحمر */
+    --frs-warning:   #f39c12;   /* البرتقالي */
+    --frs-light:     #f8f9fa;   /* الرمادي الفاتح جداً */
+    --frs-dark:      #2c3e50;   /* الأزرق الداكن جداً */
+    --frs-border:    #dee2e6;   /* لون الحدود */
+}
+
+/* ====== إعدادات عامة ====== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    background-color: #eef2f7;   /* خلفية رمادية فاتحة */
+    color: var(--frs-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    font-size: 14px;
+}
+
+/* ====== شريط التنقل العلوي ====== */
+.navbar {
+    background: linear-gradient(135deg, var(--frs-primary), var(--frs-secondary));
+    padding: 10px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    position: sticky;   /* يبقى في الأعلى عند التمرير */
+    top: 0;
+    z-index: 1000;
+}
+
+.navbar-brand {
+    color: white !important;
+    font-size: 18px;
+    letter-spacing: 1px;
+}
+
+/* أزرار التنقل في الشريط العلوي */
+.btn-nav {
+    color: rgba(255,255,255,0.85) !important;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    padding: 5px 12px;
+    margin-right: 5px;
+    font-size: 13px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.btn-nav:hover {
+    background-color: rgba(255,255,255,0.2);
+    color: white !important;
+    transform: translateY(-1px);  /* تأثير رفع خفيف عند التمرير */
+}
+
+/* ====== المحتوى الرئيسي ====== */
+main {
+    flex: 1;   /* يأخذ كل المساحة المتاحة بين الهيدر والفوتر */
+    padding: 20px;
+}
+
+/* ====== الفوتر ====== */
+.footer {
+    background: var(--frs-primary);
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    padding: 8px 0;
+    margin-top: auto;  /* يلصق الفوتر بالأسفل دائماً */
+}
+
+/* ====== اللوجو في الصفحة الرئيسية ====== */
+.logo-circle {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--frs-primary), var(--frs-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(26,58,92,0.4);
+    animation: pulse 2s infinite;  /* نبضة خفيفة */
+}
+
+.logo-text {
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+/* تأثير النبضة للوجو */
+@keyframes pulse {
+    0%   { box-shadow: 0 4px 15px rgba(26,58,92,0.4); }
+    50%  { box-shadow: 0 4px 25px rgba(46,134,193,0.6); }
+    100% { box-shadow: 0 4px 15px rgba(26,58,92,0.4); }
+}
+
+/* ====== العنوان الرئيسي ====== */
+.main-title {
+    color: var(--frs-primary);
+    font-weight: bold;
+    font-size: 22px;
+    margin-bottom: 5px;
+}
+
+/* ====== أزرار الإجراءات الرئيسية (الصفحة الرئيسية) ====== */
+.btn-main-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 25px 15px;
+    background: white;
+    border: 2px solid var(--frs-border);
+    border-radius: 12px;
+    color: var(--frs-primary);
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    cursor: pointer;
+}
+
+.btn-main-action:hover {
+    background: var(--frs-primary);
+    color: white !important;
+    border-color: var(--frs-primary);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(26,58,92,0.3);
+}
+
+.btn-main-action i {
+    margin-bottom: 8px;
+}
+
+/* ====== الكروت (Cards) ====== */
+.card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background: linear-gradient(135deg, var(--frs-primary), var(--frs-secondary));
+    color: white;
+    border-radius: 10px 10px 0 0 !important;
+    padding: 12px 16px;
+    font-weight: bold;
+}
+
+.card-header h5,
+.card-header h6 {
+    color: white;
+    margin: 0;
+}
+
+/* ====== الجداول ====== */
+.table {
+    font-size: 13px;
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--frs-light);
+    color: var(--frs-primary);
+    font-weight: bold;
+    border-bottom: 2px solid var(--frs-secondary);
+    padding: 10px 12px;
+    white-space: nowrap;  /* منع كسر النص في الهيدر */
+}
+
+.table tbody tr:hover {
+    background-color: rgba(46,134,193,0.05);  /* تمييز خفيف عند التمرير */
+}
+
+.table tbody td {
+    padding: 9px 12px;
+    vertical-align: middle;
+    border-color: var(--frs-border);
+}
+
+/* الجداول قابلة للتمرير على الشاشات الصغيرة */
+.table-responsive {
+    border-radius: 0 0 10px 10px;
+    overflow-x: auto;
+}
+
+/* ====== الـ Badges (شارات الحالة) ====== */
+.badge {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+/* ====== حقول الإدخال ====== */
+.form-control,
+.form-select {
+    border: 1px solid var(--frs-border);
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 7px 10px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--frs-secondary);
+    box-shadow: 0 0 0 3px rgba(46,134,193,0.15);
+    outline: none;
+}
+
+.form-label {
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: var(--frs-dark);
+}
+
+/* الحقول للقراءة فقط */
+.form-control[readonly] {
+    background-color: var(--frs-light);
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* ====== الأزرار ====== */
+.btn {
+    border-radius: 6px;
+    font-size: 13px;
+    padding: 7px 16px;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.btn-primary {
+    background-color: var(--frs-secondary);
+    border-color: var(--frs-secondary);
+}
+
+.btn-primary:hover {
+    background-color: var(--frs-primary);
+    border-color: var(--frs-primary);
+}
+
+/* ====== التبويبات (Tabs) ====== */
+.nav-tabs {
+    border-bottom: 2px solid var(--frs-secondary);
+}
+
+.nav-tabs .nav-link {
+    color: var(--frs-primary);
+    border: none;
+    padding: 8px 20px;
+    font-weight: bold;
+    font-size: 13px;
+    border-radius: 6px 6px 0 0;
+    transition: all 0.2s ease;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: rgba(46,134,193,0.1);
+    color: var(--frs-secondary);
+}
+
+.nav-tabs .nav-link.active {
+    background-color: var(--frs-secondary);
+    color: white;
+    border-color: var(--frs-secondary);
+}
+
+/* ====== إعدادات الطباعة ====== */
+@media print {
+    /* إخفاء عناصر لا تُطبع */
+    .navbar,
+    .footer,
+    .btn,
+    .card-header .btn,
+    form {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        font-size: 12px;
+    }
+
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+
+    /* إظهار كل صفوف الجدول عند الطباعة */
+    .table-responsive {
+        overflow: visible;
+    }
+}
+
+/* ====== التجاوب مع الشاشات الصغيرة ====== */
+@media (max-width: 768px) {
+    .navbar-brand {
+        font-size: 14px;
+    }
+
+    .nav-buttons {
+        display: none;  /* إخفاء أزرار التنقل على الموبايل */
+    }
+
+    .main-title {
+        font-size: 16px;
+    }
+
+    .btn-main-action {
+        padding: 15px 10px;
+        font-size: 12px;
+    }
+
+    .logo-circle {
+        width: 70px;
+        height: 70px;
+    }
+
+    .logo-text {
+        font-size: 18px;
+    }
+}
+
+/* ====== تأثيرات التحميل والانتقال ====== */
+.fade-in {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ====== تنسيق رسائل التنبيه ====== */
+.alert {
+    border-radius: 8px;
+    font-size: 13px;
+    border: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+/* لوجو الصفحة الرئيسية */
+.main-logo {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 15px rgba(26,58,92,0.3));
+}
+/* ====== KPI Cards - التقارير ====== */
+.kpi-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    border-top: 4px solid transparent;
+    transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: translateY(-3px);
+}
+
+.kpi-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+.kpi-number {
+    font-size: 32px;
+    font-weight: bold;
+    line-height: 1;
+    margin-bottom: 5px;
+}
+
+.kpi-number small {
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.kpi-label {
+    font-size: 12px;
+    color: #6c757d;
+    font-weight: bold;
+}
+
+/* ألوان مختلفة لكل KPI */
+.kpi-total    { border-top-color: var(--frs-secondary); color: var(--frs-secondary); }
+.kpi-open     { border-top-color: var(--frs-danger);    color: var(--frs-danger);    }
+.kpi-progress { border-top-color: var(--frs-warning);   color: var(--frs-warning);   }
+.kpi-closed   { border-top-color: var(--frs-success);   color: var(--frs-success);   }
+.kpi-mttr     { border-top-color: #9b59b6;               color: #9b59b6;               }
+.kpi-recurring{ border-top-color: #e67e22;               color: #e67e22;               }
+.kpi-rate     { border-top-color: #1abc9c;               color: #1abc9c;               }
+/* ====== Progress Bar Custom Styles ====== */
+.progress {
+    height: 8px;
+}
+
+.progress-bar {
+    width: var(--rate, 0%);
+}
+/* ====== Device Card Header ====== */
+.device-header {
+    border-right: 5px solid var(--frs-secondary);
+    border-radius: 10px;
+}
+
+.device-icon-circle {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--frs-primary), var(--frs-secondary));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+/* ====== التايم لاين ====== */
+.timeline-container {
+    position: relative;
+    padding-right: 30px;  /* مسافة لخط التايم لاين */
+}
+
+/* الخط العمودي للتايم لاين */
+.timeline-container::before {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--frs-secondary), transparent);
+}
+
+/* كل حدث في التايم لاين */
+.timeline-item {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+/* أيقونة الحدث */
+.timeline-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 14px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* ألوان أنواع الأحداث */
+.tl-maintenance { background-color: #2e86c1; }  /* أزرق - صيانة */
+.tl-offline     { background-color: #e74c3c; }  /* أحمر - خروج */
+.tl-online      { background-color: #27ae60; }  /* أخضر - عودة */
+.tl-part        { background-color: #e67e22; }  /* برتقالي - تغيير جزء */
+.tl-update      { background-color: #9b59b6; }  /* بنفسجي - تحديث */
+.tl-note        { background-color: #95a5a6; }  /* رمادي - ملاحظة */
+
+/* محتوى الحدث */
+.timeline-content {
+    flex: 1;
+    background: var(--frs-light);
+    border-radius: 8px;
+    padding: 12px 15px;
+    border: 1px solid var(--frs-border);
+    font-size: 13px;
+}
+
+.timeline-content:hover {
+    border-color: var(--frs-secondary);
+    box-shadow: 0 2px 8px rgba(46,134,193,0.1);
+}

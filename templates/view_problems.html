@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% block title %}عرض الأعطال{% endblock %}
+
+{% block content %}
+<!-- ====== نموذج البحث ====== -->
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-search me-2"></i>البحث في الأعطال</h5>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/view_problems">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">بحث (رقم العطل / الجهاز / المشروع)</label>
+                    <input type="text" name="search" class="form-control"
+                           value="{{ search }}" placeholder="اكتب هنا للبحث...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">من تاريخ</label>
+                    <input type="date" name="from_date" class="form-control" value="{{ from_date }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">إلى تاريخ</label>
+                    <input type="date" name="to_date" class="form-control" value="{{ to_date }}">
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-search me-1"></i>بحث
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ====== نتائج البحث ====== -->
+{% if problems %}
+<div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-list me-2"></i>
+            النتائج: <span class="badge bg-primary">{{ problems|length }}</span> عطل
+        </h5>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-print me-1"></i>طباعة
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="problemsTable">
+                <thead>
+                    <tr>
+                        <th>رقم العطل</th>
+                        <th>المشروع</th>
+                        <th>الجهاز</th>
+                        <th>الجهاز الثانوي</th>
+                        <th>الموقع</th>
+                        <th>وصف العطل</th>
+                        <th>تاريخ التسجيل</th>
+                        <th>الحالة</th>
+                        <th>المسؤول</th>
+                        <th>مدة الإصلاح</th>
+                        <th>تعديل</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in problems %}
+                    <tr>
+                        <td><strong>{{ p.ProblemID }}</strong></td>
+                        <td><span class="badge bg-primary">{{ p.ProjectName }}</span></td>
+                        <td>
+                            <a href="device_card/{{ p.MainDeviceID }}" class="text-decoration-none fw-bold">
+                            {{ p.DeviceName }}
+                            <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                            </a>
+                        </td>
+                        <td>
+                            {% if p.SubDeviceID %}
+                            <a href="sub_device_card/{{ p.SubDeviceID }}" class="text-decoration-none fw-bold">
+                            {{ p.SubDeviceName }}
+                            <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                            </a>
+                            {% else %}
+                            -
+                            {% endif %}
+                        </td>
+                        <td>{{ p.Location or '-' }}</td>
+                        <td>
+                            {{ p.ProblemDescription[:60] }}
+                            {% if p.ProblemDescription|length > 60 %}...{% endif %}
+                        </td>
+                        <td>
+                            {{ p.ReportedDate }}<br>
+                            <small class="text-muted">{{ p.ReportedTime }}</small>
+                        </td>
+                        <td>
+                            {% if p.Status == 'مفتوح' %}
+                                <span class="badge bg-danger">مفتوح</span>
+                            {% elif p.Status == 'قيد الإصلاح' %}
+                                <span class="badge bg-warning text-dark">قيد الإصلاح</span>
+                            {% else %}
+                                <span class="badge bg-success">مغلق</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ p.AssignedToName or '-' }}</td>
+                        <td>
+                            {% if p.RepairDurationHours %}
+                                {{ p.RepairDurationHours }} ساعة
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/edit_problem/{{ p.ProblemID }}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% elif request.method == 'POST' %}
+<!-- رسالة لما البحث ما يلاقيش نتائج -->
+<div class="alert alert-info text-center">
+    <i class="fas fa-search fa-2x mb-2 d-block"></i>
+    لا توجد نتائج مطابقة لمعايير البحث
+</div>
+{% else %}
+<!-- رسالة الترحيب قبل البحث -->
+<div class="alert alert-light text-center border">
+    <i class="fas fa-arrow-up fa-2x mb-2 d-block text-muted"></i>
+    استخدم نموذج البحث أعلاه للعثور على الأعطال
+</div>
+{% endif %}
+{% endblock %}

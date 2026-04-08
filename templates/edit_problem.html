@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}تعديل العطل #{{ problem.ProblemID }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-9">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit me-2"></i>
+                    تعديل العطل رقم: <strong class="text-primary">#{{ problem.ProblemID }}</strong>
+                </h5>
+                <span class="badge bg-secondary">تعديل رقم {{ problem.UpdateNo + 1 }}</span>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/edit_problem/{{ problem.ProblemID }}">
+
+                    <!-- ====== بيانات ثابتة للعرض فقط ====== -->
+                    <div class="alert alert-light border mb-4">
+                        <h6 class="fw-bold mb-3"><i class="fas fa-info-circle me-2"></i>بيانات العطل (للعرض فقط)</h6>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">رقم العطل</small>
+                                <strong>{{ problem.ProblemID }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">المشروع</small>
+                                <strong>{{ problem.ProjectName }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">الجهاز الرئيسي</small>
+                                <strong>{{ problem.DeviceName }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">الجهاز الثانوي</small>
+                                <strong>{{ problem.SubDeviceName or '-' }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">الموقع</small>
+                                <strong>{{ problem.Location or '-' }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">نوع الجهاز</small>
+                                <strong>{{ problem.Type or '-' }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">تاريخ التسجيل</small>
+                                <strong>{{ problem.ReportedDate }}</strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">وقت التسجيل</small>
+                                <strong>{{ problem.ReportedTime }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== الحقول القابلة للتعديل ====== -->
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">وصف العطل</label>
+                        <textarea name="problem_description" class="form-control" rows="3">{{ problem.ProblemDescription }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">الحل المتخذ</label>
+                        <textarea name="solution" class="form-control" rows="3"
+                                  placeholder="اكتب الحل هنا...">{{ problem.Solution or '' }}</textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">تعليقات إضافية</label>
+                        <textarea name="comment" class="form-control" rows="2"
+                                  placeholder="أي ملاحظات إضافية...">{{ problem.Comment or '' }}</textarea>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الحالة</label>
+                            <select name="status" class="form-select">
+                                <option value="مفتوح"       {% if problem.Status == 'مفتوح' %}selected{% endif %}>مفتوح</option>
+                                <option value="قيد الإصلاح" {% if problem.Status == 'قيد الإصلاح' %}selected{% endif %}>قيد الإصلاح</option>
+                                <option value="مغلق"        {% if problem.Status == 'مغلق' %}selected{% endif %}>مغلق</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">الموظف المسؤول</label>
+                            <select name="assigned_to" class="form-select">
+                                <option value="">-- غير محدد --</option>
+                                {% for emp in employees %}
+                                <option value="{{ emp.EmployeeID }}"
+                                    {% if problem.AssignedTo == emp.EmployeeID %}selected{% endif %}>
+                                    {{ emp.EmployeeCode }} - {{ emp.FullName }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- ====== أزرار الإجراءات ====== -->
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="/view_problems" class="btn btn-secondary">
+                            <i class="fas fa-arrow-right me-1"></i>رجوع
+                        </a>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-1"></i>حفظ التعديلات
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

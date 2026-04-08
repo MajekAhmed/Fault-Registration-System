@@ -1,0 +1,522 @@
+{% extends "base.html" %}
+{% block title %}إدارة قاعدة البيانات{% endblock %}
+
+{% block content %}
+
+<!-- ====== Tabs للتنقل ====== -->
+<ul class="nav nav-tabs mb-4" id="dbTabs">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#employees-tab">
+            <i class="fas fa-users me-1"></i>الموظفون
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#devices-tab">
+            <i class="fas fa-desktop me-1"></i>الأجهزة الرئيسية
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#projects-tab">
+            <i class="fas fa-project-diagram me-1"></i>المشاريع
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#subdevices-tab">
+            <i class="fas fa-sitemap me-1"></i>الأجهزة الثانوية
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+
+    <!-- ====== تاب الموظفين ====== -->
+    <div class="tab-pane fade show active" id="employees-tab">
+        <div class="row g-4">
+
+            <!-- نموذج إضافة موظف -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-user-plus me-2"></i>إضافة موظف جديد</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/add_employee">
+                            <div class="mb-2">
+                                <label class="form-label small">كود الموظف *</label>
+                                <input type="text" name="employee_code" class="form-control form-control-sm" placeholder="AV-001" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الاسم الكامل *</label>
+                                <input type="text" name="full_name" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">المسمى الوظيفي</label>
+                                <input type="text" name="job_title" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">القسم</label>
+                                <select name="department" class="form-select form-select-sm">
+                                    <option value="">-- اختر القسم --</option>
+                                    <option>CUPPS</option>
+                                    <option>FIDS</option>
+                                    <option>CAM</option>
+                                    <option>BRS</option>
+                                    <option>AIRview</option>
+                                    <option>AirPlan</option>
+                                    <option>إداري</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الهاتف</label>
+                                <input type="text" name="phone" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">البريد الإلكتروني</label>
+                                <input type="email" name="email" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">تاريخ التعيين</label>
+                                <input type="date" name="hire_date" class="form-control form-control-sm">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-save me-1"></i>إضافة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول الموظفين -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>قائمة الموظفين</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>الكود</th>
+                                        <th>الاسم</th>
+                                        <th>المسمى</th>
+                                        <th>القسم</th>
+                                        <th>الهاتف</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for emp in employees %}
+                                    <tr>
+                                        <td><strong>{{ emp.EmployeeCode }}</strong></td>
+                                        <td>{{ emp.FullName }}</td>
+                                        <td>{{ emp.JobTitle or '-' }}</td>
+                                        <td>{{ emp.Department or '-' }}</td>
+                                        <td>{{ emp.Phone or '-' }}</td>
+                                        <td>
+                                            {% if emp.IsActive %}
+                                                <span class="badge bg-success">نشط</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">غير نشط</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">لا يوجد موظفون مسجلون</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== تاب الأجهزة ====== -->
+    <div class="tab-pane fade" id="devices-tab">
+        <div class="row g-4">
+
+            <!-- نموذج إضافة جهاز -->
+            <div class="col-lg-4">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-plus me-2"></i>إضافة جهاز رئيسي</h6>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="/add_main_device">
+                            <div class="mb-2">
+                                <label class="form-label small">المشروع *</label>
+                                <select name="project_id" class="form-select form-select-sm" required>
+                                    <option value="">-- اختر --</option>
+                                    {% for proj in projects %}
+                                    <option value="{{ proj.ProjectID }}">{{ proj.ProjectName }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">كود الجهاز *</label>
+                                <input type="text" name="device_name" class="form-control form-control-sm" placeholder="C001" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">نوع الجهاز</label>
+                                <input type="text" name="device_type" class="form-control form-control-sm" placeholder="Check-in Kiosk">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الموقع</label>
+                                <input type="text" name="location" class="form-control form-control-sm" placeholder="Terminal 1 / Gate 5">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">عنوان IP</label>
+                                <input type="text" name="ip_address" class="form-control form-control-sm" placeholder="192.168.1.100">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الرقم التسلسلي</label>
+                                <input type="text" name="serial_number" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الشركة المصنّعة</label>
+                                <input type="text" name="manufacturer" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">الموديل</label>
+                                <input type="text" name="model" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label small">نظام التشغيل</label>
+                                <input type="text" name="os_version" class="form-control form-control-sm" placeholder="Windows 10">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small">تاريخ التركيب</label>
+                                <input type="date" name="install_date" class="form-control form-control-sm">
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-sm w-100">
+                                <i class="fas fa-save me-1"></i>إضافة
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جدول الأجهزة -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h6 class="mb-0"><i class="fas fa-list me-2"></i>قائمة الأجهزة الرئيسية</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>المشروع</th>
+                                        <th>الكود</th>
+                                        <th>النوع</th>
+                                        <th>الموقع</th>
+                                        <th>IP</th>
+                                        <th>الحالة</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for d in devices %}
+                                    <tr>
+                                        <td><span class="badge bg-primary">{{ d.ProjectName }}</span></td>
+                                        <td>
+                                            <a href="/device_card/{{ d.MainDeviceID }}" class="text-decoration-none fw-bold">
+                                                {{ d.DeviceName }}
+                                                <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                                            </a>
+                                        </td>
+                                        <td>{{ d.DeviceType or '-' }}</td>
+                                        <td>{{ d.Location or '-' }}</td>
+                                        <td><small>{{ d.IPAddress or '-' }}</small></td>
+                                        <td>
+                                            {% if d.IsActive %}
+                                                <span class="badge bg-success">{{ d.Status }}</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">معطَّل</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center text-muted py-3">لا توجد أجهزة مسجلة</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== تاب المشاريع ====== -->
+    <div class="tab-pane fade" id="projects-tab">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-project-diagram me-2"></i>المشاريع الستة</h6>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>اسم المشروع</th>
+                                <th>الكود</th>
+                                <th>الوصف</th>
+                                <th>تاريخ البدء</th>
+                                <th>الحالة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for proj in projects %}
+                            <tr>
+                                <td>{{ proj.ProjectID }}</td>
+                                <td><strong>{{ proj.ProjectName }}</strong></td>
+                                <td><span class="badge bg-info text-dark">{{ proj.ProjectCode }}</span></td>
+                                <td><small>{{ proj.Description or '-' }}</small></td>
+                                <td>{{ proj.StartDate or '-' }}</td>
+                                <td>
+                                    {% if proj.IsActive %}
+                                        <span class="badge bg-success">نشط</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">غير نشط</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ====== تاب الأجهزة الثانوية ====== -->
+<div class="tab-pane fade" id="subdevices-tab">
+    <div class="row g-4">
+
+        <!-- نموذج إضافة جهاز ثانوي -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>إضافة جهاز ثانوي
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/add_sub_device">
+
+                        <!-- اختيار المشروع أولاً -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">المشروع *</label>
+                            <select id="sub_project_filter"
+                                    class="form-select form-select-sm"
+                                    onchange="filterMainDevices(this.value)">
+                                <option value="">-- اختر المشروع --</option>
+                                {% for proj in projects %}
+                                <option value="{{ proj.ProjectID }}">
+                                    {{ proj.ProjectName }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- اختيار الجهاز الرئيسي -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">الجهاز الرئيسي *</label>
+                            <select name="main_device_id"
+                                    id="sub_main_device_id"
+                                    class="form-select form-select-sm"
+                                    required>
+                                <option value="">-- اختر الجهاز الرئيسي --</option>
+                                {% for d in devices %}
+                                <option value="{{ d.MainDeviceID }}"
+                                        data-project="{{ d.ProjectID }}">
+                                    {{ d.ProjectName }} ← {{ d.DeviceName }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- اسم الجهاز الثانوي -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">اسم الجهاز *</label>
+                            <input type="text" name="sub_device_name"
+                                   class="form-control form-control-sm"
+                                   placeholder="طابعة / ماوس / OCR ..."
+                                   required>
+                        </div>
+
+                        <!-- نوع الجهاز -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">النوع *</label>
+                            <select name="sub_device_type"
+                                    class="form-select form-select-sm" required>
+                                <option value="">-- اختر --</option>
+                                <option value="Printer">Printer - طابعة</option>
+                                <option value="Scanner">Scanner - ماسح</option>
+                                <option value="Input Device">Input Device - إدخال</option>
+                                <option value="Network">Network - شبكة</option>
+                                <option value="Display">Display - شاشة</option>
+                                <option value="Other">Other - أخرى</option>
+                            </select>
+                        </div>
+
+                        <!-- منفذ الاتصال -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">منفذ الاتصال</label>
+                            <input type="text" name="connected_port"
+                                   class="form-control form-control-sm"
+                                   placeholder="USB1 / COM1 / Network ...">
+                        </div>
+
+                        <!-- الشركة المصنّعة -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">الشركة المصنّعة</label>
+                            <input type="text" name="manufacturer"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <!-- الموديل -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">الموديل</label>
+                            <input type="text" name="model"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <!-- الرقم التسلسلي -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">الرقم التسلسلي</label>
+                            <input type="text" name="serial_number"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <!-- رقم الأصل -->
+                        <div class="mb-2">
+                            <label class="form-label small fw-bold">رقم الأصل</label>
+                            <input type="text" name="asset_tag"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <!-- تاريخ التركيب -->
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">تاريخ التركيب</label>
+                            <input type="date" name="install_date"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="fas fa-save me-1"></i>إضافة الجهاز الثانوي
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+            <!-- جدول الأجهزة الثانوية -->
+            <div class="col-lg-8">
+                <div class="card shadow-sm">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="fas fa-list me-2"></i>
+                            قائمة الأجهزة الثانوية
+                            <span class="badge bg-light text-dark">
+                                {{ sub_devices|length }}
+                            </span>
+                        </h6>
+                        <!-- فلتر سريع بالبحث -->
+                        <input type="text"
+                            class="form-control form-control-sm w-auto"
+                            placeholder="بحث سريع..."
+                            onkeyup="filterSubDevicesTable(this.value)">
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0"
+                                id="subDevicesTable">
+                                <thead>
+                                    <tr>
+                                        <th>المشروع</th>
+                                        <th>الجهاز الرئيسي</th>
+                                        <th>اسم الجهاز</th>
+                                        <th>النوع</th>
+                                        <th>منفذ الاتصال</th>
+                                        <th>الشركة</th>
+                                        <th>الموديل</th>
+                                        <th>الحالة</th>
+                                        <th>حذف</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sub in sub_devices %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge bg-primary">
+                                                {{ sub.ProjectName }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <a href="/device_card/{{ sub.MainDeviceID }}" class="text-decoration-none fw-bold">
+                                                {{ sub.MainDeviceName }}
+                                                <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <a href="/sub_device_card/{{ sub.SubDeviceID }}" class="text-decoration-none fw-bold">
+                                                {{ sub.SubDeviceName }}
+                                                <i class="fas fa-external-link-alt ms-1" style="font-size:10px"></i>
+                                            </a>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info text-dark">
+                                                {{ sub.SubDeviceType or '-' }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <code>{{ sub.ConnectedPort or '-' }}</code>
+                                        </td>
+                                        <td>{{ sub.Manufacturer or '-' }}</td>
+                                        <td>{{ sub.Model or '-' }}</td>
+                                        <td>
+                                            {% if sub.IsActive %}
+                                                <span class="badge bg-success">نشط</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">معطَّل</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <form method="POST"
+                                                action="/deactivate_sub_device/{{ sub.SubDeviceID }}"
+                                                onsubmit="return confirm('تعطيل هذا الجهاز؟')">
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="9"
+                                            class="text-center text-muted py-3">
+                                            لا توجد أجهزة ثانوية مسجلة
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}
